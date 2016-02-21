@@ -2,14 +2,11 @@ package com.sap.akka.service
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
-import com.sap.akka.BaseTest
+import com.sap.akka.BaseActorTest
 import com.sap.akka.model.CompanyDetails
-import com.typesafe.config.ConfigFactory
+import com.sap.akka.service.CompanyActor._
 
-class CompanyActorTest extends TestKit(ActorSystem("system-test", ConfigFactory.parseString( """akka.loggers = ["akka.testkit.TestEventListener"]""")))
-with BaseTest {
+class CompanyActorTest extends BaseActorTest {
 
   "CompanyActor" when {
 
@@ -20,13 +17,22 @@ with BaseTest {
         val companyActor = system.actorOf(CompanyActor.props())
 
         // when
-        companyActor ! CreateCompany("sap", "SAP AG")
+        companyActor ! PutCompany(CompanyDetails("sap", "SAP AG"))
 
         // then
-        expectMsg(Right(CompanyCreated))
+        expectMsg(CompanyPut)
       }
 
-      "handle when client fails to create schema" in {
+      "fail to create company if company's name is empty" in {
+
+        // given
+        val companyActor = system.actorOf(CompanyActor.props())
+
+        // when
+        companyActor ! PutCompany(CompanyDetails("", "IBM Poland Sp. z o.o."))
+
+        // then
+        expectMsg(CompanyPut)
       }
     }
 
@@ -43,7 +49,7 @@ with BaseTest {
 
         expectMsgPF() {
           case Right(GetCompanyResponse(company)) =>
-            company shouldBe CompanyDetails("IBM", "IBM Worldwide")
+            company shouldBe CompanyDetails("sap", "SAP AG")
         }
       }
 
@@ -55,9 +61,7 @@ with BaseTest {
         // when
         companyActor ! GetCompany(UUID.randomUUID().toString)
 
-        expectMsgPF() {
-          case Left(ResourceNotFound(_)) =>
-        }
+        expectMsg(CompanyNotFound)
       }
     }
 

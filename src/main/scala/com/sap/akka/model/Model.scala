@@ -12,4 +12,3 @@ trait JsonProtocol extends DefaultJsonProtocol {
 
   implicit val employeeFormat = jsonFormat2(Employee)
 }
-

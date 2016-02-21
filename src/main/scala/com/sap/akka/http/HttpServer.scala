@@ -3,9 +3,9 @@ package com.sap.akka.http
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 
-trait HttpServer extends HttpRoutes {
+trait HttpServer extends CompanyHttpRoutes {
 
-  implicit val system = ActorSystem()
+  implicit override val system: ActorSystem
 
   val interface = "0.0.0.0"
   val port = 9000
