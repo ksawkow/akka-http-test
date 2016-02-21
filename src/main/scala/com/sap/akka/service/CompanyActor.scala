@@ -3,7 +3,7 @@ package com.sap.akka.service
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.util.Timeout
 import com.sap.akka.model.CompanyDetails
-import com.sap.akka.service.CompanyActor.{CompanyPut, PutCompany, GetCompany, GetCompanyResponse}
+import com.sap.akka.service.CompanyActor._
 
 object CompanyActor {
 
@@ -33,8 +33,10 @@ class CompanyActor extends Actor with ActorLogging {
 
     case PutCompany(details) ⇒
       val savedSender = sender
-      log.info(s"sender: $savedSender")
-      savedSender ! CompanyPut
+      details.name.isEmpty match {
+        case false ⇒ savedSender ! CompanyPut
+        case true ⇒ savedSender ! Left(CompanyNotPut("The name of company is required."))
+      }
 
     case GetCompany(name) ⇒
       sender() ! GetCompanyResponse(CompanyDetails("sap", "SAP AG"))

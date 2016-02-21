@@ -29,10 +29,13 @@ class CompanyActorTest extends BaseActorTest {
         val companyActor = system.actorOf(CompanyActor.props())
 
         // when
-        companyActor ! PutCompany(CompanyDetails("", "IBM Poland Sp. z o.o."))
+        companyActor ! PutCompany(CompanyDetails("", "IPM Poland Sp. z o.o."))
 
         // then
-        expectMsg(CompanyPut)
+        expectMsgPF() {
+          case Left(CompanyNotPut(message)) ⇒
+            message.isEmpty mustBe false
+        }
       }
     }
 
@@ -44,12 +47,12 @@ class CompanyActorTest extends BaseActorTest {
         val companyActor = system.actorOf(CompanyActor.props())
 
         // when
-        val name = "IBM"
+        val name = "sap"
         companyActor ! GetCompany(name)
 
         expectMsgPF() {
           case Right(GetCompanyResponse(company)) =>
-            company shouldBe CompanyDetails("sap", "SAP AG")
+            company mustBe CompanyDetails("sap", "SAP AG")
         }
       }
 
