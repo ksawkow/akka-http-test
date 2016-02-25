@@ -2,9 +2,19 @@ package com.sap.akka.http
 
 import akka.http.scaladsl.Http
 
-trait HttpServer extends CompanyHttpRoutes {
+import scala.util.{Failure, Success}
+
+trait HttpServer extends CompanyEndpoint {
+
   val interface = "0.0.0.0"
   val port = 9000
 
-  Http().bindAndHandle(routes, interface, port)
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  Http().bindAndHandle(routes, interface, port) onComplete {
+    case Success(binding) =>
+      println(s"Server started, port: $port")
+    case Failure(e) =>
+      println(s"Cannot start server, error: ${e.getMessage}")
+  }
 }

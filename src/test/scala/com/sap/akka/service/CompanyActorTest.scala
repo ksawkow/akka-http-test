@@ -20,7 +20,7 @@ class CompanyActorTest extends BaseActorTest {
         companyActor ! PutCompany(CompanyDetails("sap", "SAP AG"))
 
         // then
-        expectMsg(CompanyPut)
+        expectMsg(CompanyPutOK)
       }
 
       "fail to create company if company's name is empty" in {
@@ -33,7 +33,7 @@ class CompanyActorTest extends BaseActorTest {
 
         // then
         expectMsgPF() {
-          case Left(CompanyNotPut(message)) ⇒
+          case Left(CompanyPutProblem(message)) ⇒
             message.isEmpty mustBe false
         }
       }

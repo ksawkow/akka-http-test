@@ -9,9 +9,9 @@ object CompanyActor {
 
   case class PutCompany(companyDetails: CompanyDetails)
 
-  case object CompanyPut
+  case object CompanyPutOK
 
-  case class CompanyNotPut(errorDescription: String)
+  case class CompanyPutProblem(errorDescription: String)
 
   case class GetCompany(name: String)
 
@@ -34,8 +34,8 @@ class CompanyActor extends Actor with ActorLogging {
     case PutCompany(details) ⇒
       val savedSender = sender
       details.name.isEmpty match {
-        case false ⇒ savedSender ! CompanyPut
-        case true ⇒ savedSender ! Left(CompanyNotPut("The name of company is required."))
+        case false ⇒ savedSender ! CompanyPutOK
+        case true ⇒ savedSender ! Left(CompanyPutProblem("The name of company is required."))
       }
 
     case GetCompany(name) ⇒

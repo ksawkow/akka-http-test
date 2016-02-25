@@ -1,11 +1,12 @@
 package com.sap.akka.service
 
 import akka.actor.ActorSystem
-import akka.stream.Materializer
+import akka.stream.ActorMaterializer
 
 trait Actors {
-  implicit val system: ActorSystem
-  implicit val materializer: Materializer
+
+  implicit val system: ActorSystem = ActorSystem("company-service")
+  implicit val materializer = ActorMaterializer()
 
   val companyActor = system.actorOf(CompanyActor.props())
 }

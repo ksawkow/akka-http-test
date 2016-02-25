@@ -9,9 +9,9 @@ import com.sap.akka.model.JsonProtocol
 import com.sap.akka.service.Actors
 import com.sap.akka.service.CompanyActor.{GetCompany, GetCompanyResponse}
 
-import scala.util.Success
+import scala.util.{Failure, Success}
 
-trait CompanyHttpRoutes extends Actors with JsonProtocol {
+trait CompanyEndpoint extends Actors with JsonProtocol {
 
   import scala.concurrent.duration._
 
@@ -19,18 +19,18 @@ trait CompanyHttpRoutes extends Actors with JsonProtocol {
 
   val routes =
     pathPrefix("companies") {
-      (get & path(Segment)) { companyName ⇒
-        onComplete((companyActor ? GetCompany(companyName)).mapTo[GetCompanyResponse]) {
-          case Success(result) => complete(result.companyDetails.asInstanceOf[ToResponseMarshallable])
-        }
-          complete{
-            StatusCodes.OK
+      path(Segment) { companyName ⇒
+        get {
+          onComplete((companyActor ? GetCompany(companyName)).mapTo[GetCompanyResponse]) {
+            case Success(result) => complete(result.companyDetails.asInstanceOf[ToResponseMarshallable])
+            case Failure(f) => complete(f)
           }
         } ~
-        ( put & path(Segment)) { companyName ⇒
-          complete{
-            StatusCodes.OK
+          post {
+            complete {
+              StatusCodes.OK
+            }
           }
-        }
+      }
     }
 }
