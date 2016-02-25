@@ -1,25 +1,26 @@
 package com.sap.akka.service
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.util.Timeout
 import com.sap.akka.model.CompanyDetails
 import com.sap.akka.service.CompanyActor._
 
 object CompanyActor {
 
-  case class PutCompany(companyDetails: CompanyDetails)
+  def props(): Props = Props(new CompanyActor())
 
-  case object CompanyPutOK
+  case class PostCompany(companyDetails: CompanyDetails)
 
-  case class CompanyPutProblem(errorDescription: String)
+  case class CompanyPostProblem(statusCode: StatusCode, errorDescription: String)
 
   case class GetCompany(name: String)
 
   case class GetCompanyResponse(companyDetails: CompanyDetails)
 
-  case object CompanyNotFound
+  case class CompanyGetProblem(statusCode: StatusCode, errorDescription: String)
 
-  def props(): Props = Props(new CompanyActor())
+  case object CompanyPostOK
 }
 
 
@@ -31,11 +32,11 @@ class CompanyActor extends Actor with ActorLogging {
 
   override def receive: Receive = {
 
-    case PutCompany(details) ⇒
-      val savedSender = sender
+    case PostCompany(details) ⇒
+      val savedSender = sender()
       details.name.isEmpty match {
-        case false ⇒ savedSender ! CompanyPutOK
-        case true ⇒ savedSender ! Left(CompanyPutProblem("The name of company is required."))
+        case false ⇒ savedSender ! CompanyPostOK
+        case true ⇒ savedSender ! Left(CompanyPostProblem(StatusCodes.BadRequest, "The name of company is required."))
       }
 
     case GetCompany(name) ⇒
