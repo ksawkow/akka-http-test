@@ -28,10 +28,9 @@ sealed trait EndpointTest extends BaseTest with ScalatestRouteTest with RequestB
 
 class BaseEndpointTest(_system: ActorSystem) extends AutoCleaningTestKit(_system) with EndpointTest with Actors {
 
-  def this() = this(ActorSystem())
-
   override implicit val system = _system
   override implicit val materializer = ActorMaterializer()
-
   override val companyActor = system.actorOf(CompanyActor.props())
+
+  def this() = this(ActorSystem())
 }

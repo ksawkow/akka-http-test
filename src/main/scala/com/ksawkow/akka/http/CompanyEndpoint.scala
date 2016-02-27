@@ -15,8 +15,6 @@ class CompanyEndpoint(val companyActor: ActorRef) extends JsonProtocol {
 
   import scala.concurrent.duration._
 
-  implicit def timeout: Timeout = 1.seconds
-
   val route =
     pathPrefix("companies") {
       pathEnd {
@@ -35,4 +33,6 @@ class CompanyEndpoint(val companyActor: ActorRef) extends JsonProtocol {
           }
         }
     }
+
+  implicit def timeout: Timeout = 1.seconds
 }

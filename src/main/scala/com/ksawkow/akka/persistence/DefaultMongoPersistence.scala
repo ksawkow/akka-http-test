@@ -20,6 +20,8 @@ object MongoNames {
 
 trait MongoClient extends ServiceConfiguration {
 
+  val mongoClient = MongoClients.create(mongoClientSettings())
+
   private def mongoClientSettings() = {
     val clusterSettings = ClusterSettings.builder()
       .applyConnectionString(new ConnectionString(getMongoUri))
@@ -28,8 +30,6 @@ trait MongoClient extends ServiceConfiguration {
       .clusterSettings(clusterSettings)
       .build()
   }
-
-  val mongoClient = MongoClients.create(mongoClientSettings())
 }
 
 trait MongoPersistence extends MongoClient {
