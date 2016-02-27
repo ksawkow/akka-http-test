@@ -15,22 +15,24 @@ class CompanyEndpoint(val companyActor: ActorRef) extends JsonProtocol {
 
   import scala.concurrent.duration._
 
+  implicit def timeout: Timeout = 1.seconds
+
   val route =
     pathPrefix("companies") {
-      path(Segment) { companyName ⇒
-        get {
-          onComplete((companyActor ? GetCompany(companyName)).mapTo[GetCompanyResponse]) {
-            case Success(result) => complete(result.companyDetails.asInstanceOf[ToResponseMarshallable])
-            case Failure(f) => complete(f)
+      pathEnd {
+        post {
+          complete {
+            StatusCodes.OK
           }
-        } ~
-          post {
-            complete {
-              StatusCodes.OK
+        }
+      } ~
+        path(Segment) { companyName ⇒
+          get {
+            onComplete((companyActor ? GetCompany(companyName)).mapTo[GetCompanyResponse]) {
+              case Success(result) => complete(result.companyDetails.asInstanceOf[ToResponseMarshallable])
+              case Failure(f) => complete(f)
             }
           }
-      }
+        }
     }
-
-  implicit def timeout: Timeout = 1.seconds
 }
