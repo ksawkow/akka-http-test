@@ -7,8 +7,9 @@ import akka.stream.ActorMaterializer
 import akka.testkit.{ImplicitSender, TestKit}
 import com.ksawkow.akka.service.{Actors, CompanyActor}
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 
-trait BaseTest extends WordSpecLike with MustMatchers with BeforeAndAfterAll
+trait BaseTest extends WordSpecLike with MustMatchers with BeforeAndAfterAll with BeforeAndAfter with ScalaFutures
 
 sealed class AutoCleaningTestKit(_system: ActorSystem) extends TestKit(_system) with BaseTest {
 
