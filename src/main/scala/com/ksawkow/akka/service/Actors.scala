@@ -1,4 +1,4 @@
-package com.sap.akka.service
+package com.ksawkow.akka.service
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer

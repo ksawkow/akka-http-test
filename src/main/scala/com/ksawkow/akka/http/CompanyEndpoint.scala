@@ -1,13 +1,13 @@
-package com.sap.akka.http
+package com.ksawkow.akka.http
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.sap.akka.model.JsonProtocol
-import com.sap.akka.service.CompanyActor.{GetCompany, GetCompanyResponse}
+import com.ksawkow.akka.model.JsonProtocol
+import com.ksawkow.akka.service.CompanyActor.{GetCompany, GetCompanyResponse}
 
 import scala.util.{Failure, Success}
 
@@ -29,7 +29,7 @@ class CompanyEndpoint(val companyActor: ActorRef) extends JsonProtocol {
         path(Segment) { companyName ⇒
           get {
             onComplete((companyActor ? GetCompany(companyName)).mapTo[GetCompanyResponse]) {
-              case Success(result) => complete(result.companyDetails.asInstanceOf[ToResponseMarshallable])
+              case Success(result) => complete(result.companyDetails)
               case Failure(f) => complete(f)
             }
           }

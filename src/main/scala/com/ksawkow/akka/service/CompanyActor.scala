@@ -1,10 +1,10 @@
-package com.sap.akka.service
+package com.ksawkow.akka.service
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.util.Timeout
-import com.sap.akka.model.CompanyDetails
-import com.sap.akka.service.CompanyActor._
+import com.ksawkow.akka.model.CompanyDetails
+import com.ksawkow.akka.service.CompanyActor._
 
 object CompanyActor {
 
@@ -21,6 +21,7 @@ object CompanyActor {
   case class CompanyGetProblem(statusCode: StatusCode, errorDescription: String)
 
   case object CompanyPostOK
+
 }
 
 
