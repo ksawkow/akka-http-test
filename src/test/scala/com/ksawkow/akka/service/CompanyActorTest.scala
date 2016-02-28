@@ -1,21 +1,29 @@
 package com.ksawkow.akka.service
 
-import java.util.UUID
-
-import akka.http.scaladsl.model.StatusCodes
 import com.ksawkow.akka.BaseActorTest
-import com.ksawkow.akka.model.CompanyDetails
+import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists, MongoError, MongoNotFound}
+import com.ksawkow.akka.persistence.DefaultMongoPersistence
 import com.ksawkow.akka.service.CompanyActor.{CompanyPostOK, _}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+
 class CompanyActorTest extends BaseActorTest {
+
+  private val stubMongoPersistence = stub[DefaultMongoPersistence]
 
   "CompanyActor" when {
 
     "receives CreateCompany message" should {
 
-      "create company" in {
+      "succeed to create a company" in {
         // given
-        val companyActor = system.actorOf(CompanyActor.props())
+        (stubMongoPersistence.createCompany _)
+          .when(*)
+          .returns(Future.successful(Right(true)))
+
+        val companyActor = system.actorOf(CompanyActor.props(stubMongoPersistence))
 
         // when
         companyActor ! PostCompany(CompanyDetails("sap", "SAP AG"))
@@ -24,50 +32,95 @@ class CompanyActorTest extends BaseActorTest {
         expectMsg(CompanyPostOK)
       }
 
-      "fail to create company if company's name is empty" in {
+      "fail to create company if underlying persistence fails with known error" in {
 
         // given
-        val companyActor = system.actorOf(CompanyActor.props())
+        (stubMongoPersistence.createCompany _)
+          .when(*)
+          .returns(Future {
+            Left(MongoAlreadyExists(s"Company named 'bcd' already exists"))
+          })
+        val companyActor = system.actorOf(CompanyActor.props(stubMongoPersistence))
 
         // when
-        companyActor ! PostCompany(CompanyDetails("", "IPM Poland Sp. z o.o."))
+        companyActor ! PostCompany(CompanyDetails("bcd", "IPM Poland Sp. z o.o."))
 
         // then
         expectMsgPF() {
-          case Left(CompanyPostProblem(StatusCodes.BadRequest, message)) ⇒
-            message.isEmpty mustBe false
+          case Left(MongoAlreadyExists(_)) ⇒
+        }
+      }
+
+      "fail to create company if underlying persistence fails with exception" in {
+
+        // given
+        (stubMongoPersistence.createCompany _)
+          .when(*)
+          .returns(Future.failed(new IllegalStateException("Fail ..")))
+
+        val companyActor = system.actorOf(CompanyActor.props(stubMongoPersistence))
+
+        // when
+        companyActor ! PostCompany(CompanyDetails("bcd", "IPM Poland Sp. z o.o."))
+
+        // then
+        expectMsgPF() {
+          case Left(MongoError(_)) ⇒
         }
       }
     }
 
-    "receives GetCompany message" should {
+    "receives GetCompany message" must {
 
       "get existing company" in {
 
         // given
-        val companyActor = system.actorOf(CompanyActor.props())
+        (stubMongoPersistence.getCompany _)
+          .when(*)
+          .returns(Future.successful(Right(CompanyDetails("aeco", "PL"))))
+        val companyActor = system.actorOf(CompanyActor.props(stubMongoPersistence))
 
         // when
-        val name = "sap"
+        val name = "aeco"
         companyActor ! GetCompany(name)
 
+        expectMsg(GetCompanyResponse(CompanyDetails("aeco", "PL")))
+      }
+
+      "fail to get company if underlying persistence fails with known error" in {
+
+        // given
+        (stubMongoPersistence.getCompany _)
+          .when(*)
+          .returns(Future {
+            Left(MongoNotFound(s"Company named 'bcd' doesn't exists"))
+          })
+        val companyActor = system.actorOf(CompanyActor.props(stubMongoPersistence))
+
+        // when
+        companyActor ! GetCompany("bcd")
+
+        // then
         expectMsgPF() {
-          case Right(GetCompanyResponse(company)) =>
-            company mustBe CompanyDetails("sap", "SAP AG")
+          case Left(MongoNotFound(_)) ⇒
         }
       }
 
-      "handle if company doesn't exist" in {
+      "fail to create company if underlying persistence fails with exception" in {
 
         // given
-        val companyActor = system.actorOf(CompanyActor.props())
+        (stubMongoPersistence.getCompany _)
+          .when(*)
+          .returns(Future.failed(new IllegalStateException("Fail ..")))
+
+        val companyActor = system.actorOf(CompanyActor.props(stubMongoPersistence))
 
         // when
-        companyActor ! GetCompany(UUID.randomUUID().toString)
+        companyActor ! GetCompany("bcd")
 
+        // then
         expectMsgPF() {
-          case Left(CompanyGetProblem(statusCode, _)) =>
-            statusCode mustBe StatusCodes.NotFound
+          case Left(MongoError(_)) ⇒
         }
       }
     }

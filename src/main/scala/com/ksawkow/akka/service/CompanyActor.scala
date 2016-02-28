@@ -1,14 +1,19 @@
 package com.ksawkow.akka.service
 
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.http.scaladsl.model.{StatusCode, StatusCodes}
-import akka.util.Timeout
-import com.ksawkow.akka.model.CompanyDetails
+import akka.actor.{ActorLogging, Props}
+import akka.http.scaladsl.model.StatusCode
+import com.ksawkow.akka.model.{CompanyDetails, MongoError}
+import com.ksawkow.akka.persistence.DefaultMongoPersistence
 import com.ksawkow.akka.service.CompanyActor._
+
+import scala.util.{Failure, Success}
 
 object CompanyActor {
 
-  def props(): Props = Props(new CompanyActor())
+  def props(mongoPersistence: DefaultMongoPersistence): Props = {
+    println("from PROPS mongoPersistence==null ? " + (mongoPersistence == null))
+    Props(new CompanyActor(mongoPersistence))
+  }
 
   case class PostCompany(companyDetails: CompanyDetails)
 
@@ -24,23 +29,32 @@ object CompanyActor {
 
 }
 
+class CompanyActor(mongoPersistence: DefaultMongoPersistence) extends BaseActor with ActorLogging {
 
-class CompanyActor extends Actor with ActorLogging {
-
-  import scala.concurrent.duration._
-
-  implicit def timeout: Timeout = 1.second
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   override def receive: Receive = {
 
     case PostCompany(details) ⇒
       val savedSender = sender()
-      details.name.isEmpty match {
-        case false ⇒ savedSender ! CompanyPostOK
-        case true ⇒ savedSender ! Left(CompanyPostProblem(StatusCodes.BadRequest, "The name of company is required."))
+      mongoPersistence.createCompany(details) onComplete {
+        case Success(Right(result)) ⇒
+          savedSender ! CompanyPostOK
+        case Success(Left(problem)) ⇒
+          savedSender ! Left(problem)
+        case Failure(failure) ⇒
+          savedSender ! Left(MongoError(failure.getMessage))
       }
 
     case GetCompany(name) ⇒
-      sender() ! GetCompanyResponse(CompanyDetails("sap", "SAP AG"))
+      val savedSender = sender()
+      mongoPersistence.getCompany(name) onComplete {
+        case Success(Right(result)) ⇒
+          savedSender ! GetCompanyResponse(result)
+        case Success(Left(problem)) ⇒
+          savedSender ! Left(problem)
+        case Failure(failure) ⇒
+          savedSender ! Left(MongoError(failure.getMessage))
+      }
   }
 }

@@ -8,4 +8,6 @@ sealed abstract class ServiceError(message: String) {
 
 case class MongoError(message: String) extends ServiceError(message)
 
+case class MongoAlreadyExists(message: String) extends ServiceError(message)
+
 case class MongoNotFound(message: String) extends ServiceError(message)

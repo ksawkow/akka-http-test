@@ -25,6 +25,7 @@ libraryDependencies ++= {
     "org.mongodb" % "mongodb-driver-reactivestreams" % "1.2.0",
 
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test",
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
   )
 }

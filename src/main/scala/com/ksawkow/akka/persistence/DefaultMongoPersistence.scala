@@ -3,12 +3,12 @@ package com.ksawkow.akka.persistence
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.ksawkow.akka.config.ServiceConfiguration
-import com.ksawkow.akka.model.{CompanyDetails, MongoError, ServiceError}
-import com.mongodb.ConnectionString
+import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists, MongoError, ServiceError}
 import com.mongodb.async.client.MongoClientSettings
 import com.mongodb.client.model.Filters
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.reactivestreams.client.MongoClients
+import com.mongodb.{ConnectionString, ErrorCategory, MongoWriteException}
 import org.bson.Document
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,7 +24,7 @@ trait MongoClient extends ServiceConfiguration {
 
   private def mongoClientSettings() = {
     val clusterSettings = ClusterSettings.builder()
-      .applyConnectionString(new ConnectionString(getMongoUri))
+      .applyConnectionString(new ConnectionString("mongodb://localhost:27017"))
       .build()
     MongoClientSettings.builder()
       .clusterSettings(clusterSettings)
@@ -32,23 +32,13 @@ trait MongoClient extends ServiceConfiguration {
   }
 }
 
-trait MongoPersistence extends MongoClient {
-
-  val companyCollection = mongoClient.getDatabase("company-service").getCollection("company")
-
-  def createCompany(company: CompanyDetails)
-                   (implicit executionContext: ExecutionContext, materializer: Materializer): Future[Either[ServiceError, Boolean]]
-
-  def getCompany(name: String)
-                (implicit executionContext: ExecutionContext, materializer: Materializer): Future[Either[ServiceError, CompanyDetails]]
-}
-
-class DefaultMongoPersistence extends MongoPersistence {
+class DefaultMongoPersistence(implicit executionContext: ExecutionContext, materializer: Materializer) extends MongoClient {
 
   import MongoNames._
 
-  override def createCompany(company: CompanyDetails)
-                            (implicit executionContext: ExecutionContext, materializer: Materializer): Future[Either[ServiceError, Boolean]] = {
+  val companyCollection = mongoClient.getDatabase("company-service").getCollection("company")
+
+  def createCompany(company: CompanyDetails): Future[Either[ServiceError, Boolean]] = {
 
     val document = new Document(IdAttribute, company.name)
       .append(AttributeCompanyDescription, company.description)
@@ -57,12 +47,14 @@ class DefaultMongoPersistence extends MongoPersistence {
       .runWith(Sink.head)
       .map(result => Right(true))
       .recover({
+        case me: MongoWriteException
+          if ErrorCategory.fromErrorCode(me.getCode) == ErrorCategory.DUPLICATE_KEY ⇒
+          Left(MongoAlreadyExists(s"Company named '${company.name}' already exists"))
         case t: Throwable ⇒ Left(MongoError(t.getMessage))
       })
   }
 
-  def getCompany(name: String)
-                (implicit executionContext: ExecutionContext, materializer: Materializer): Future[Either[ServiceError, CompanyDetails]] = {
+  def getCompany(name: String): Future[Either[ServiceError, CompanyDetails]] = {
 
     Source.fromPublisher(companyCollection.find(Filters.eq(IdAttribute, name)))
       .map(doc ⇒ Right(documentToCompany(doc)))
