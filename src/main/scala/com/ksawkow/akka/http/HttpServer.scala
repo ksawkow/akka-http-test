@@ -14,9 +14,9 @@ trait HttpServer extends Actors {
   val port = 9119
 
   Http().bindAndHandle(routes, interface, port) onComplete {
-    case Success(binding) =>
+    case Success(binding) ⇒
       println(s"Server started, port: $port")
-    case Failure(e) =>
+    case Failure(e) ⇒
       println(s"Cannot start server, error: ${e.getMessage}")
   }
 }
