@@ -13,7 +13,7 @@ import org.bson.Document
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object MongoNames {
+object MongoStrings {
   val IdAttribute = "_id"
   val AttributeCompanyDescription = "description"
 }
@@ -34,7 +34,7 @@ trait MongoClient extends ServiceConfiguration {
 
 class DefaultMongoPersistence(implicit executionContext: ExecutionContext, materializer: Materializer) extends MongoClient {
 
-  import MongoNames._
+  import MongoStrings._
 
   val companyCollection = mongoClient.getDatabase("company-service").getCollection("company")
 

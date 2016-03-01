@@ -17,12 +17,12 @@ class CompanyEndpointTest extends WordSpecLike with MustMatchers with ScalatestR
       // given
       val companyActor = actor(new Act {
         become {
-          case PostCompany(CompanyDetails("companyName", "description")) =>
+          case PostCompany(CompanyDetails("nasa", "Our Company")) =>
             sender() ! Right(CompanyPostOK)
         }
       })
       val route = new CompanyEndpoint(companyActor).route
-      val entity = """{ "name" : "company", "description" : "Our Company" }"""
+      val entity = """{ "name" : "nasa", "description" : "Our Company" }"""
 
       // when
       Post("/companies", HttpEntity(MediaTypes.`application/json`, entity)) ~> route ~> check {
@@ -38,7 +38,7 @@ class CompanyEndpointTest extends WordSpecLike with MustMatchers with ScalatestR
       val companyActor = actor(new Act {
         become {
           case GetCompany(name) ⇒
-            sender() ! GetCompanyResponse(CompanyDetails("sap", "SAP AG"))
+            sender() ! Right(GetCompanyResponse(CompanyDetails("sap", "SAP AG")))
         }
       })
       val route = new CompanyEndpoint(companyActor).route

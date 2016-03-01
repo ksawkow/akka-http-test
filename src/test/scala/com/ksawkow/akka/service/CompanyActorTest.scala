@@ -29,7 +29,7 @@ class CompanyActorTest extends BaseActorTest {
         companyActor ! PostCompany(CompanyDetails("sap", "SAP AG"))
 
         // then
-        expectMsg(CompanyPostOK)
+        expectMsg(Right(CompanyPostOK))
       }
 
       "fail to create company if underlying persistence fails with known error" in {
@@ -84,7 +84,7 @@ class CompanyActorTest extends BaseActorTest {
         val name = "aeco"
         companyActor ! GetCompany(name)
 
-        expectMsg(GetCompanyResponse(CompanyDetails("aeco", "PL")))
+        expectMsg(Right(GetCompanyResponse(CompanyDetails("aeco", "PL"))))
       }
 
       "fail to get company if underlying persistence fails with known error" in {
@@ -123,10 +123,6 @@ class CompanyActorTest extends BaseActorTest {
           case Left(MongoError(_)) ⇒
         }
       }
-    }
-
-    "receives FilterCompanies message" should {
-
     }
   }
 }
