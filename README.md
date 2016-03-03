@@ -6,7 +6,7 @@ Simple Scala example utilizing following technologies:
 * Akka Actors
 * (Un)marshalling JSON requests/responses
 * MongoDB reactive-streams driver
-* MongoDB basic usage
+* MongoDB basic features
 
 ## Additional sbt tasks
 
