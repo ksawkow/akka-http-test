@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.ksawkow.akka.BaseTest
-import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists}
+import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists, MongoNotFound}
 
 import scala.concurrent.ExecutionContext
 
@@ -39,6 +39,14 @@ class DefaultMongoPersistenceTest extends BaseTest with MongoClient {
         whenReady(persistence.getCompany("ipc")) { result =>
           result.isRight mustBe true
           result.right.get mustBe company
+        }
+      }
+
+      "fail to get a nonexistent company" in {
+
+        val companyName = UUID.randomUUID().toString
+        whenReady(persistence.getCompany(companyName)) { result =>
+          result mustBe Left(MongoNotFound("Company not found"))
         }
       }
 

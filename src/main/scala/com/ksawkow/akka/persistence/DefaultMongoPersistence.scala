@@ -3,7 +3,7 @@ package com.ksawkow.akka.persistence
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.ksawkow.akka.config.ServiceConfiguration
-import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists, MongoError, ServiceError}
+import com.ksawkow.akka.model._
 import com.mongodb.async.client.MongoClientSettings
 import com.mongodb.client.model.Filters
 import com.mongodb.connection.ClusterSettings
@@ -58,7 +58,8 @@ class DefaultMongoPersistence(implicit executionContext: ExecutionContext, mater
 
     Source.fromPublisher(companyCollection.find(Filters.eq(IdAttribute, name)))
       .map(doc ⇒ Right(documentToCompany(doc)))
-      .runWith(Sink.head)
+      .runWith(Sink.headOption)
+      .map(potentialCompany ⇒ potentialCompany.getOrElse(Left(MongoNotFound("Company not found"))))
       .recover({
         case t: Throwable ⇒ Left(MongoError(t.getMessage))
       })
