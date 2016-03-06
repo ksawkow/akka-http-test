@@ -2,27 +2,27 @@ package com.ksawkow.akka.service
 
 import akka.actor.{ActorLogging, Props}
 import com.ksawkow.akka.model.{CompanyDetails, MongoError}
-import com.ksawkow.akka.persistence.DefaultMongoPersistence
+import com.ksawkow.akka.persistence.CompanyMongoPersistence
 import com.ksawkow.akka.service.CompanyActor._
 
 import scala.util.{Failure, Success}
 
 object CompanyActor {
 
-  def props(mongoPersistence: DefaultMongoPersistence): Props = {
+  def props(mongoPersistence: CompanyMongoPersistence): Props = {
     Props(new CompanyActor(mongoPersistence))
   }
 
   case class PostCompany(companyDetails: CompanyDetails)
 
+  case object CompanyPostOK
+
   case class GetCompany(name: String)
 
   case class GetCompanyResponse(companyDetails: CompanyDetails)
-
-  case object CompanyPostOK
 }
 
-class CompanyActor(mongoPersistence: DefaultMongoPersistence) extends BaseActor with ActorLogging {
+class CompanyActor(mongoPersistence: CompanyMongoPersistence) extends BaseActor with ActorLogging {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 

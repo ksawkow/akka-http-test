@@ -10,7 +10,7 @@ import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists, MongoNotFound
 
 import scala.concurrent.ExecutionContext
 
-class DefaultMongoPersistenceTest extends BaseTest with MongoClient {
+class CompanyMongoPersistenceTest extends BaseTest with MongoClient {
 
   val system = ActorSystem()
 
@@ -18,7 +18,9 @@ class DefaultMongoPersistenceTest extends BaseTest with MongoClient {
 
   implicit val executionContext: ExecutionContext = system.dispatcher
 
-  val persistence = new DefaultMongoPersistence()
+  val persistence = new CompanyMongoPersistence {
+    override val companyCollection = mongoClient.getDatabase("company-service-tests").getCollection("company-tests")
+  }
 
   after {
     whenReady(Source.fromPublisher(persistence.companyCollection.drop()).runWith(Sink.ignore)) { _ =>

@@ -2,7 +2,7 @@ package com.ksawkow.akka.service
 
 import com.ksawkow.akka.BaseActorTest
 import com.ksawkow.akka.model.{CompanyDetails, MongoAlreadyExists, MongoError, MongoNotFound}
-import com.ksawkow.akka.persistence.DefaultMongoPersistence
+import com.ksawkow.akka.persistence.CompanyMongoPersistence
 import com.ksawkow.akka.service.CompanyActor.{CompanyPostOK, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 class CompanyActorTest extends BaseActorTest {
 
-  private val stubMongoPersistence = stub[DefaultMongoPersistence]
+  private val stubMongoPersistence = stub[CompanyMongoPersistence]
 
   "CompanyActor" when {
 

@@ -32,7 +32,7 @@ trait MongoClient extends ServiceConfiguration {
   }
 }
 
-class DefaultMongoPersistence(implicit executionContext: ExecutionContext, materializer: Materializer) extends MongoClient {
+class CompanyMongoPersistence(implicit executionContext: ExecutionContext, materializer: Materializer) extends MongoClient {
 
   import MongoStrings._
 
@@ -56,7 +56,9 @@ class DefaultMongoPersistence(implicit executionContext: ExecutionContext, mater
 
   def getCompany(name: String): Future[Either[ServiceError, CompanyDetails]] = {
 
-    Source.fromPublisher(companyCollection.find(Filters.eq(IdAttribute, name)))
+    val filter = Filters.eq(IdAttribute, name)
+
+    Source.fromPublisher(companyCollection.find(filter))
       .map(doc ⇒ Right(documentToCompany(doc)))
       .runWith(Sink.headOption)
       .map(potentialCompany ⇒ potentialCompany.getOrElse(Left(MongoNotFound("Company not found"))))
